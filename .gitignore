@@ -1,4 +1,4 @@
 .idea/
 .DS_Store
 venv/
-model/data/cmudict-processed.csv
+model/data/cmudict-processed.json
