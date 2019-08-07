@@ -51,8 +51,8 @@ struct WAV {
 fn convert_bytes_to_int(buf : &Vec<u8>, loc : u32, size: u8, is_big_endian: bool) -> u32 {
     let loc = loc as usize;
     let size = size as usize;
-    if is_big_endian { buf[loc.. loc + size].iter().fold(0, |converted_integer, &x| converted_integer << 4 | x as u32) }
-    else { buf[loc.. loc + size].iter().rev().fold(0, |converted_integer, &x| converted_integer << 4 | x as u32) }
+    if is_big_endian { buf[loc.. loc + size].iter().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
+    else { buf[loc.. loc + size].iter().rev().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
 }
 
 fn read_wav(file_name : String) -> WAV {
