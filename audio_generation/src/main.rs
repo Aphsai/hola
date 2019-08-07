@@ -30,6 +30,23 @@ const u32 BITS_PER_SAMPLE_LOC = 34;
 const u32 SUB_CHUNK_2_ID_LOC = 36;
 const u32 SUB_CHUNK_2_SIZE_LOC = 40;
 
+#[derive(Clone, Copy)]
+struct Wav {
+    pub ChunkID : u8,
+    pub ChunkSize : u8,
+    pub Format : u8,
+    pub Subchunk1ID : u8,
+    pub Subchunk1Size : u8,
+    pub AudioFormat : u8,
+    pub NumChannels : u8,
+    pub SampleRate : u8,
+    pub ByteRate : u8,
+    pub BlockAlign : u8,
+    pub BitsPerSample : u8,
+    pub Subchunk2ID : u8,
+    pub Subchunk2Size : u8,
+}
+
 // 44 Bytes of WAV header information, ignoring extra parameters
 
 
@@ -39,6 +56,9 @@ fn read_wav(String file_name) -> Vec<u8> {
 
    f.read_to_end(&mut buffer)?;
    return buffer;
+}
+
+fn construct_merged_header(wav_a : &Vec<u8>, wav_b : &Vec<u8>) {
 }
 
 fn main() {
