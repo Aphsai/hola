@@ -68,14 +68,14 @@ fn read_wav(file_name : String) -> WAV {
         chunk_size : convert_bytes_to_int(&buffer, CHUNK_SIZE_LOC, CHUNK_SIZE_SIZE, false), 
         format : convert_bytes_to_int(&buffer, FORMAT_LOC, FORMAT_SIZE, true), 
         subchunk_1_id : convert_bytes_to_int(&buffer, SUBCHUNK_1_ID_LOC, SUBCHUNK_1_ID_SIZE, true),
-        subchunk_1_size : convert_bytes_to_int(&buffer, SUBCHUNK_1_SIZE_LOC, SUBCHUNK_1_SIZE_SIZE, true),
+        subchunk_1_size : convert_bytes_to_int(&buffer, SUBCHUNK_1_SIZE_LOC, SUBCHUNK_1_SIZE_SIZE, false),
         audio_format :  convert_bytes_to_int(&buffer, AUDIO_FORMAT_LOC, AUDIO_FORMAT_SIZE, false),
         num_channels : convert_bytes_to_int(&buffer, NUM_CHANNEL_LOC, NUM_CHANNEL_SIZE, false),
         sample_rate : convert_bytes_to_int(&buffer, SAMPLE_RATE_LOC, SAMPLE_RATE_SIZE, false),
         byte_rate : convert_bytes_to_int(&buffer, BYTE_RATE_LOC, BYTE_RATE_SIZE, false),
         block_align : convert_bytes_to_int(&buffer, BLOCK_ALIGN_LOC, BLOCK_ALIGN_SIZE, false),
-        bits_per_sample : convert_bytes_to_int(&buffer, BITS_PER_SAMPLE_LOC, BITS_PER_SAMPLE_SIZE, true),
-        subchunk_2_id : convert_bytes_to_int(&buffer, SUBCHUNK_2_ID_LOC, SUBCHUNK_2_ID_SIZE, false),
+        bits_per_sample : convert_bytes_to_int(&buffer, BITS_PER_SAMPLE_LOC, BITS_PER_SAMPLE_SIZE, false),
+        subchunk_2_id : convert_bytes_to_int(&buffer, SUBCHUNK_2_ID_LOC, SUBCHUNK_2_ID_SIZE, true),
         subchunk_2_size : convert_bytes_to_int(&buffer, SUBCHUNK_2_SIZE_LOC, SUBCHUNK_2_SIZE_SIZE, false),
         data : buffer[DATA_LOC as usize ..].to_vec(),
     }
@@ -88,7 +88,7 @@ fn construct_merged_wav(wav_a : &mut WAV, wav_b : &mut WAV) -> WAV {
         chunk_size : wav_a.chunk_size + wav_b.subchunk_2_size,
         format : wav_a.format,
         subchunk_1_id : wav_a.subchunk_1_id,
-        subchunk_1_size : wav_a.subchunk_1_size + wav_b.subchunk_2_size,
+        subchunk_1_size : wav_a.subchunk_1_size,
         audio_format : wav_a.audio_format,
         num_channels : wav_a.num_channels,
         sample_rate : wav_a.sample_rate,
@@ -110,12 +110,12 @@ fn write_wav_to_file(wav: WAV, filename : String) {
     file.write_u32::<BigEndian>(wav.format).unwrap();
     file.write_u32::<BigEndian>(wav.subchunk_1_id).unwrap();
     file.write_u32::<LittleEndian>(wav.subchunk_1_size).unwrap();
-    file.write_u16::<LittleEndian>((wav.audio_format << 16) as u16).unwrap();
-    file.write_u16::<LittleEndian>((wav.num_channels << 16) as u16).unwrap();
+    file.write_u16::<LittleEndian>(wav.audio_format as u16).unwrap();
+    file.write_u16::<LittleEndian>(wav.num_channels as u16).unwrap();
     file.write_u32::<LittleEndian>(wav.sample_rate).unwrap();
     file.write_u32::<LittleEndian>(wav.byte_rate).unwrap();
-    file.write_u32::<LittleEndian>(wav.block_align).unwrap();
-    file.write_u16::<LittleEndian>((wav.bits_per_sample << 16) as u16).unwrap();
+    file.write_u16::<LittleEndian>(wav.block_align as u16).unwrap();
+    file.write_u16::<LittleEndian>(wav.bits_per_sample as u16).unwrap();
     file.write_u32::<BigEndian>(wav.subchunk_2_id).unwrap();
     file.write_u32::<LittleEndian>(wav.subchunk_2_size).unwrap();
 
@@ -128,6 +128,5 @@ fn main() {
     let mut sample_one_data : WAV = read_wav("sample_1.wav".to_string());    
     let mut sample_two_data : WAV = read_wav("sample_2.wav".to_string());
     let merged_wav : WAV =  construct_merged_wav(&mut sample_one_data, &mut sample_two_data);
-    println!("{} {} {}", merged_wav.audio_format, merged_wav.num_channels, merged_wav.bits_per_sample);
     write_wav_to_file(merged_wav, "merged.wav".to_string());
 }
