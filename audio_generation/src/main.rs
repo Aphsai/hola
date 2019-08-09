@@ -3,7 +3,7 @@ extern crate byteorder;
 use std::io::{ BufWriter };
 use std::io::prelude::*;
 use std::fs::File;
-use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use byteorder::{ BigEndian, LittleEndian, WriteBytesExt, ByteOrder };
 
 const CHUNK_ID_SIZE : u8 = 4;
 const CHUNK_SIZE_SIZE : u8 = 4;
@@ -35,6 +35,7 @@ const SUBCHUNK_2_SIZE_LOC : u32 = 40;
 const DATA_LOC : u32 = 44;
 
 struct Wave {
+
     pub chunk_id : u32,
     pub chunk_size : u32,
     pub format : u32,
@@ -49,13 +50,16 @@ struct Wave {
     pub subchunk_2_id : u32,
     pub subchunk_2_size : u32,
     pub data : Vec<u8>,
+
 }
 
 fn convert_bytes_to_int(buf : &Vec<u8>, loc : u32, size: u8, is_big_endian: bool) -> u32 {
     let loc = loc as usize;
     let size = size as usize;
-    if is_big_endian { buf[loc.. loc + size].iter().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
-    else { buf[loc.. loc + size].iter().rev().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
+    if is_big_endian { BigEndian::read_uint(&buf[loc.. loc + size], size) as u32 }
+    else { LittleEndian::read_uint(&buf[loc.. loc + size], size) as u32 }
+    //if is_big_endian { buf[loc.. loc + size].iter().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
+    //else { buf[loc.. loc + size].iter().rev().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
 }
 
 fn read_wav(file_name : &str) -> Wave {
