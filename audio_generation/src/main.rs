@@ -34,7 +34,7 @@ const SUBCHUNK_2_ID_LOC : u32 = 36;
 const SUBCHUNK_2_SIZE_LOC : u32 = 40;
 const DATA_LOC : u32 = 44;
 
-struct WAV {
+struct Wave {
     pub chunk_id : u32,
     pub chunk_size : u32,
     pub format : u32,
@@ -58,12 +58,12 @@ fn convert_bytes_to_int(buf : &Vec<u8>, loc : u32, size: u8, is_big_endian: bool
     else { buf[loc.. loc + size].iter().rev().fold(0, |converted_integer, &x| converted_integer << 8 | x as u32) }
 }
 
-fn read_wav(file_name : String) -> WAV {
+fn read_wav(file_name : &str) -> Wave {
     let mut buffer = Vec::new();
     let mut f = File::open(file_name).unwrap();
     f.read_to_end(&mut buffer).unwrap();
 
-    return WAV {
+    return Wave {
         chunk_id : convert_bytes_to_int(&buffer, CHUNK_ID_LOC, CHUNK_ID_SIZE, true),
         chunk_size : convert_bytes_to_int(&buffer, CHUNK_SIZE_LOC, CHUNK_SIZE_SIZE, false), 
         format : convert_bytes_to_int(&buffer, FORMAT_LOC, FORMAT_SIZE, true), 
@@ -81,9 +81,11 @@ fn read_wav(file_name : String) -> WAV {
     }
 }
 
-fn construct_merged_wav(wav_a : &mut WAV, wav_b : &mut WAV) -> WAV {
+fn construct_merged_wav(wav_a : &mut Wave, wav_b : &mut Wave) -> Wave {
+
     wav_a.data.append(&mut wav_b.data);
-    return WAV {
+
+    return Wave {
         chunk_id : wav_a.chunk_id,
         chunk_size : wav_a.chunk_size + wav_b.subchunk_2_size,
         format : wav_a.format,
@@ -102,9 +104,11 @@ fn construct_merged_wav(wav_a : &mut WAV, wav_b : &mut WAV) -> WAV {
 
 }
 
-fn write_wav_to_file(wav: WAV, filename : String) {
+fn write_wav_to_file(wav: &Wave, filename : &str) {
+
     let file = File::create(filename).expect("Unable to create file...");
     let mut file = BufWriter::new(file);
+
     file.write_u32::<BigEndian>(wav.chunk_id).unwrap();
     file.write_u32::<LittleEndian>(wav.chunk_size).unwrap();
     file.write_u32::<BigEndian>(wav.format).unwrap();
@@ -125,8 +129,8 @@ fn write_wav_to_file(wav: WAV, filename : String) {
 }
 
 fn main() {
-    let mut sample_one_data : WAV = read_wav("sample_1.wav".to_string());    
-    let mut sample_two_data : WAV = read_wav("sample_2.wav".to_string());
-    let merged_wav : WAV =  construct_merged_wav(&mut sample_one_data, &mut sample_two_data);
-    write_wav_to_file(merged_wav, "merged.wav".to_string());
+    let mut sample_one_data : Wave = read_wav("sample_1.wav");    
+    let mut sample_two_data : Wave = read_wav("sample_2.wav");
+    let merged_wav : Wave =  construct_merged_wav(&mut sample_one_data, &mut sample_two_data);
+    write_wav_to_file(&merged_wav, "merged.wav");
 }
