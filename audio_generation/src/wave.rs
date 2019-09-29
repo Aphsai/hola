@@ -67,7 +67,10 @@ impl Wave {
         let mut buffer = Vec::new();
         let mut f = File::open(file_name).unwrap();
         f.read_to_end(&mut buffer).unwrap();
-    
+        
+        // Truncate metadata using this
+        let subchunk_2_size = convert_bytes_to_int(&buffer, SUBCHUNK_2_SIZE_LOC, SUBCHUNK_2_SIZE_SIZE, false);
+
         Wave {
 
             chunk_id : convert_bytes_to_int(&buffer, CHUNK_ID_LOC, CHUNK_ID_SIZE, true),
@@ -82,8 +85,8 @@ impl Wave {
             block_align : convert_bytes_to_int(&buffer, BLOCK_ALIGN_LOC, BLOCK_ALIGN_SIZE, false),
             bits_per_sample : convert_bytes_to_int(&buffer, BITS_PER_SAMPLE_LOC, BITS_PER_SAMPLE_SIZE, false),
             subchunk_2_id : convert_bytes_to_int(&buffer, SUBCHUNK_2_ID_LOC, SUBCHUNK_2_ID_SIZE, true),
-            subchunk_2_size : convert_bytes_to_int(&buffer, SUBCHUNK_2_SIZE_LOC, SUBCHUNK_2_SIZE_SIZE, false),
-            data : buffer[DATA_LOC as usize ..].to_vec(),
+            subchunk_2_size : subchunk_2_size,
+            data : buffer[DATA_LOC as usize .. subchunk_2_size as usize].to_vec(),
 
         }
     }
@@ -94,6 +97,7 @@ impl Wave {
         self.data.append(&mut wav_b.data);
     }
     
+    // Decompose header 
     pub fn write_to_file(&self, filename : &str) {
     
         let file = File::create(filename).expect("Unable to create file...");
