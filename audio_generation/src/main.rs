@@ -1,5 +1,4 @@
 
-extern crate cpython;
 mod wave;
 
 use crate::wave::*;
@@ -7,16 +6,18 @@ use std::process::Command;
 use std::str;
 use std::env;
 
+const PROJECT_ROOT : &str = "../../";
 const RNN_PATH : &str = "rnn";
 const PREDICTOR : &str = "predict.py";
 
 fn predict() {
     // Change to python directory
     let mut current_directory = env::current_dir().unwrap();
+    current_directory.push(PROJECT_ROOT);
     current_directory.push(RNN_PATH);
     env::set_current_dir(current_directory.as_path()).unwrap();
     let output = Command::new("python")
-                    .args(&[PREDICTOR, "sarah"])
+                    .args(&[PREDICTOR, "saksham"])
                     .output()
                     .expect("Failed to execute process.");
     println!("{}", str::from_utf8(&(output.stdout)).unwrap());
