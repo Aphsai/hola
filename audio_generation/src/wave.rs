@@ -6,6 +6,7 @@ use std::io::prelude::*;
 use std::fs::File;
 use byteorder::{ BigEndian, LittleEndian, WriteBytesExt, ByteOrder };
 
+// Size definitions for WAVE header format
 const CHUNK_ID_SIZE : u8 = 4;
 const CHUNK_SIZE_SIZE : u8 = 4;
 const FORMAT_SIZE : u8 = 4;
@@ -20,6 +21,7 @@ const BITS_PER_SAMPLE_SIZE : u8 = 2;
 const SUBCHUNK_2_ID_SIZE : u8 = 4;
 const SUBCHUNK_2_SIZE_SIZE : u8 = 4;
 
+// Locations for the various definitions
 const CHUNK_ID_LOC : u32 = 0;
 const CHUNK_SIZE_LOC : u32 = 4;
 const FORMAT_LOC : u32 = 8;
@@ -52,7 +54,7 @@ pub struct Wave {
     pub data : Vec<u8>,
 }
 
-
+// Private utility function
 fn convert_bytes_to_int(buf : &Vec<u8>, loc : u32, size: u8, is_big_endian: bool) -> u32 {
     let loc = loc as usize;
     let size = size as usize;
@@ -61,7 +63,8 @@ fn convert_bytes_to_int(buf : &Vec<u8>, loc : u32, size: u8, is_big_endian: bool
 }
 
 impl Wave {
-
+    
+    // Take a file name as input and output the data stored in Wave format
     pub fn read_wav(file_name : &str) -> Wave {
 
         let mut buffer = Vec::new();
@@ -90,14 +93,15 @@ impl Wave {
 
         }
     }
-    
+   
+    // Append to current wave
     pub fn append(&mut self, wav_b : &mut Wave) {
         self.chunk_size += wav_b.subchunk_2_size;
         self.subchunk_2_size += wav_b.subchunk_2_size;
         self.data.append(&mut wav_b.data);
     }
-    
-    // Decompose header 
+
+    // Decompose header and output to file
     pub fn write_to_file(&self, filename : &str) {
     
         let file = File::create(filename).expect("Unable to create file...");
@@ -122,6 +126,5 @@ impl Wave {
         }
 
     }
-
 }
 
