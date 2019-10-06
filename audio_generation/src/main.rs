@@ -64,7 +64,6 @@ fn get_slices(phoneme_string : &Vec<u8>) -> Vec<&[u8]> {
 fn main() {
     
     let flags = App::new("Hola!")
-        .version("1.0.0")
         .author("Saksham and Kelvin")
         .about("Simulates speech through phoneme prediction")
         .arg(Arg::with_name("word")
