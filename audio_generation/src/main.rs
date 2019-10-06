@@ -6,7 +6,6 @@ use std::process::Command;
 use std::str;
 use std::env;
 
-const PROJECT_ROOT : &str = "../../../";
 const AUDIO_FILE_PATH : &str = "audio_files";
 const RNN_PATH : &str = "rnn";
 const PREDICTOR : &str = "predict.py";
@@ -21,8 +20,7 @@ fn set_relative_path(file_path : &str) {
 fn predict(word : &str) -> Vec<u8> {
 
     // Change to python directory
-    let file_path = format!("{}{}", PROJECT_ROOT, RNN_PATH);
-    set_relative_path(&file_path);
+    set_relative_path(&RNN_PATH);
 
     // Call predict.py
     let output = Command::new("python")
@@ -31,6 +29,9 @@ fn predict(word : &str) -> Vec<u8> {
                     .expect("Failed to execute process.");
 
     println!("{}", str::from_utf8(&output.stdout).unwrap());
+    if output.stderr.len() != 0 {
+        println!("{}", str::from_utf8(&output.stderr).unwrap());
+    }
 
     output.stdout.clone()
 }
@@ -58,6 +59,10 @@ fn get_slices(phoneme_string : &Vec<u8>) -> Vec<&[u8]> {
 fn main() {
     
     let args : Vec<String> = env::args().collect(); 
+    if args.len() < 2 {
+        eprintln!("Error: No word to simulate found.");
+        std::process::exit(1);
+    }
 
     let phoneme_string = predict(args[1].as_str());
     let phoneme_slices = get_slices(&phoneme_string);
@@ -65,20 +70,18 @@ fn main() {
     let mut wave_files : Vec<Wave> = Vec::new();
 
     // Change path to audio file directory and generate slices
-    let file_path = format!("{}{}", PROJECT_ROOT, AUDIO_FILE_PATH);
-    set_relative_path(&file_path);
+    set_relative_path(&AUDIO_FILE_PATH);
     
     for phoneme in phoneme_slices {
         let file_name = format!("{}.wav", str::from_utf8(phoneme).unwrap());
         wave_files.push(Wave::read_wav(&file_name));
     }
    
-    // Change path to project root to spit out audio file
-    set_relative_path(&PROJECT_ROOT);
+    // Change path to binary folder to spit out audio file
+    set_relative_path("");
     let mut merged_file = wave_files.remove(0);
     for x in 0.. wave_files.len() {
         merged_file.append(&mut wave_files[x]);
     }
     merged_file.write_to_file("merged.wav");
-
 }
