@@ -1,7 +1,8 @@
-
+extern crate clap;
 mod wave;
 
 use crate::wave::*;
+use clap::{ Arg, App };
 use std::process::Command;
 use std::str;
 use std::env;
@@ -27,13 +28,17 @@ fn predict(word : &str) -> Vec<u8> {
                     .args(&[PREDICTOR, word])
                     .output()
                     .expect("Failed to execute process.");
-
-    println!("{}", str::from_utf8(&output.stdout).unwrap());
+    
+    if output.stdout.len() != 0 {
+        println!("{}", str::from_utf8(&output.stdout).unwrap());
+    } else {
+        println!("...no output produced");
+    }
     if output.stderr.len() != 0 {
         println!("{}", str::from_utf8(&output.stderr).unwrap());
     }
 
-    output.stdout.clone()
+    output.stdout
 }
 
 fn get_slices(phoneme_string : &Vec<u8>) -> Vec<&[u8]> {
@@ -58,19 +63,42 @@ fn get_slices(phoneme_string : &Vec<u8>) -> Vec<&[u8]> {
 
 fn main() {
     
-    let args : Vec<String> = env::args().collect(); 
-    if args.len() < 2 {
-        eprintln!("Error: No word to simulate found.");
-        std::process::exit(1);
-    }
+    let flags = App::new("Hola!")
+        .version("1.0.0")
+        .author("Saksham and Kelvin")
+        .about("Simulates speech through phoneme prediction")
+        .arg(Arg::with_name("word")
+            .short("w")
+            .long("word")
+            .takes_value(true)
+            .help("Word to simulate"))
+        .arg(Arg::with_name("output")
+             .short("o")
+             .long("output")
+             .takes_value(true)
+             .help("Output file name, default merged.wav"))
+        .arg(Arg::with_name("path")
+             .short("p")
+             .long("path")
+             .takes_value(true)
+             .help("Relative path to audio files, default same as executable"))
+        .get_matches();
 
-    let phoneme_string = predict(args[1].as_str());
+    let output_file_name = flags.value_of("output").unwrap_or("merged.wav");
+    let path_to_files = flags.value_of("path").unwrap_or("");
+    let word = match flags.value_of("word") {
+        Some(v) => v,
+        None => panic!("No word to simulate provided! Please use the -w flag"),
+    };
+
+    let phoneme_string = predict(&word);
     let phoneme_slices = get_slices(&phoneme_string);
     
     let mut wave_files : Vec<Wave> = Vec::new();
 
     // Change path to audio file directory and generate slices
-    set_relative_path(&AUDIO_FILE_PATH);
+    let file_path = format!("{}{}", &path_to_files, &AUDIO_FILE_PATH);
+    set_relative_path(&file_path);
     
     for phoneme in phoneme_slices {
         let file_name = format!("{}.wav", str::from_utf8(phoneme).unwrap());
@@ -83,5 +111,5 @@ fn main() {
     for x in 0.. wave_files.len() {
         merged_file.append(&mut wave_files[x]);
     }
-    merged_file.write_to_file("merged.wav");
+    merged_file.write_to_file(&output_file_name);
 }
