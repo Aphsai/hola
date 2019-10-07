@@ -1,0 +1,9 @@
+[package]
+name = "hola"
+version = "0.1.0"
+authors = ["Saksham Aggarwal <saksham.a@hotmail.ca>", "Kelvin Jiang <k.jiang1118@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "1.3.2"
+clap = "2.33.0"
